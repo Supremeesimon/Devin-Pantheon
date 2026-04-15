@@ -11,7 +11,7 @@ Devin is an autonomous car brokerage agent designed to find private car sellers 
 ## Key Metrics
 | Metric | Value |
 | :--- | :--- |
-| Total Listings Found | 0 |
+| Total Listings Found | 1 |
 | Numbers Extracted | 0 |
 | Synthflow Calls Triggered | 0 |
 | Deals Closed | 0 |
