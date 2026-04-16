@@ -118,7 +118,7 @@ if __name__ == "__main__":
                     "http_mode": "GET",
                     "url": "https://api.manus.im/v1/leads/{ad_id}/images",
                     "speech_while_using_the_tool": "Let me pull up those photos for you right now...",
-                    "run_action_before_call_start": False
+                    "run_action_before_call_starts": False
                 }
             },
             {
@@ -128,10 +128,13 @@ if __name__ == "__main__":
                     "http_mode": "POST",
                     "url": "https://api.manus.ai/v2/task.create",
                     "speech_while_using_the_tool": "I'm letting Devin know right now, he'll be thrilled.",
-                    "run_action_before_call_start": False,
-                    "custom_headers": {
-                        "x-manus-api-key": os.getenv('MANUS_API_KEY')
-                    }
+                    "run_action_before_call_starts": False,
+                    "headers": [
+                        {
+                            "name": "x-manus-api-key",
+                            "value": os.getenv('MANUS_API_KEY')
+                        }
+                    ]
                 }
             }
         ]
