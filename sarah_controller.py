@@ -15,6 +15,62 @@ class SarahController:
             "Content-Type": "application/json"
         }
 
+    def list_agents(self):
+        """List all agents in the Synthflow account."""
+        log("Listing all agents...")
+        try:
+            # Note: The docs show GET /v2/assistants/
+            response = requests.get(f"{self.base_url}/assistants/", headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
+            # Based on docs, response is { "status": "success", "response": { "assistants": [...] } }
+            # But the real response seems to be "ok"
+            if data.get("status") in ["success", "ok"]:
+                agents = data.get("response", {}).get("assistants", [])
+                log(f"Found {len(agents)} agents.")
+                return agents
+            log(f"List agents returned non-success status: {data.get('status')}")
+            log(f"Full response: {json.dumps(data, indent=2)}")
+            return []
+        except Exception as e:
+            log(f"Failed to list agents: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                log(f"Response content: {e.response.text}")
+            return []
+
+    def delete_agent(self, assistant_id):
+        """Delete a specific agent by ID."""
+        log(f"Deleting agent {assistant_id}...")
+        try:
+            # Note: The docs show DELETE /v2/assistants/:model_id
+            response = requests.delete(f"{self.base_url}/assistants/{assistant_id}", headers=self.headers)
+            response.raise_for_status()
+            log(f"Agent {assistant_id} deleted successfully.")
+            return True
+        except Exception as e:
+            log(f"Failed to delete agent {assistant_id}: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                log(f"Response content: {e.response.text}")
+            return False
+
+    def cleanup_older_agents(self):
+        """Delete all existing agents to ensure a fresh start."""
+        agents = self.list_agents()
+        if not agents:
+            log("No existing agents found to clean up.")
+            return
+        
+        log(f"Starting cleanup of {len(agents)} agents...")
+        for agent in agents:
+            # The list agents response for each agent seems to have "model_id" or "id"
+            # Let's check both or log the agent object
+            agent_id = agent.get("id") or agent.get("model_id")
+            if agent_id:
+                self.delete_agent(agent_id)
+            else:
+                log(f"Could not find ID for agent: {json.dumps(agent)}")
+        log("Cleanup complete.")
+
     def create_sarah(self):
         """Create the Sarah assistant via Synthflow API with full blueprint specs."""
         log("Initiating Sarah's creation with full blueprint...")
@@ -23,8 +79,6 @@ class SarahController:
             "name": "Sarah - Car Brokerage Intelligence Officer",
             "description": "Inbound agent for Devin Car Brokerage. Handles initial seller inquiries, qualifies leads, and coordinates with Devin.",
             "phone_number": os.getenv("SYNTHFLOW_NUMBER"),
-            "external_webhook_url": "https://devin-api.manus.im/v1/synthflow/webhook",
-            "inbound_call_webhook_url": "https://devin-api.manus.im/v1/synthflow/inbound-call-webhook",
             "agent": {
                 "prompt": (
                     "You are Sarah, a friendly and professional car brokerage agent working for Devin. "
@@ -41,28 +95,26 @@ class SarahController:
             "is_recording": True
         }
         
-        # Simulation mode for the test run
-        if os.getenv("DEVIN_TEST_MODE") == "true":
-            log("[TEST MODE] Sarah creation payload validated. Skipping actual API call.")
-            return {"id": "test_assistant_id_123", "status": "success"}
-
         try:
             response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
             response.raise_for_status()
             assistant_data = response.json()
-            log(f"Sarah created successfully! Assistant ID: {assistant_data.get('id')}")
+            log(f"Full Response: {json.dumps(assistant_data, indent=2)}")
+            assistant_id = assistant_data.get("response", {}).get("model_id")
+            log(f"Sarah created successfully! Assistant ID: {assistant_id}")
             return assistant_data
         except Exception as e:
             log(f"Failed to create Sarah: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                log(f"Response content: {e.response.text}")
             return None
 
-    def attach_custom_action(self, assistant_id, action_id):
-        """Attach a custom action (like image retrieval) to Sarah."""
-        log(f"Attaching action {action_id} to Sarah ({assistant_id})...")
-        # Placeholder for action attachment logic
-        pass
-
 if __name__ == "__main__":
-    # This would be run as part of Devin's "Act" phase if Sarah needs to be updated or created
     controller = SarahController()
-    # controller.create_sarah()
+    # First, list them to see what's actually there
+    agents = controller.list_agents()
+    if agents:
+        controller.cleanup_older_agents()
+    
+    # Now create Sarah
+    controller.create_sarah()
