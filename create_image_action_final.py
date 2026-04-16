@@ -12,26 +12,20 @@ def create_action():
         "Content-Type": "application/json"
     }
     
-    # Payload matching the verified documentation and working test
     payload = {
         "CUSTOM_ACTION": {
-            "name": "DISPATCH_DEVIN_PROD",
-            "description": "Creates a high-priority task for Devin via Manus API when a seller is ready to sell.",
-            "http_mode": "POST",
-            "url": "https://api.manus.ai/v2/task.create",
-            "speech_while_using_the_tool": "I'm letting Devin know right now, he'll be thrilled.",
+            "name": "GET_VEHICLE_IMAGES_PROD",
+            "description": "Retrieves vehicle image URLs from Devin's system for a given ad ID.",
+            "http_mode": "GET",
+            "url": "https://api.manus.im/v1/leads/{ad_id}/images",
+            "speech_while_using_the_tool": "Let me pull up those photos for you right now...",
             "run_action_before_call_start": False,
             "headers": [
                 {
                     "name": "x-manus-api-key",
                     "value": MANUS_API_KEY
                 }
-            ],
-            "json_body_stringified": json.dumps({
-                "message": {
-                    "content": "A seller is ready to sell. Please process this lead immediately."
-                }
-            })
+            ]
         }
     }
     
@@ -51,10 +45,13 @@ def attach_action(assistant_id, action_id):
         "Authorization": f"Bearer {SYNTHFLOW_API_KEY}",
         "Content-Type": "application/json"
     }
-    # Attach only the production actions
-    # 1. The new DISPATCH_DEVIN_PROD
-    # 2. The GET_VEHICLE_IMAGES (we'll keep the existing one or create a clean one)
-    payload = {"model_id": assistant_id, "actions": [action_id]}
+    # Fetch current actions to avoid overwriting DISPATCH_DEVIN_PROD
+    get_url = f"https://api.synthflow.ai/v2/assistants/{assistant_id}"
+    get_res = requests.get(get_url, headers=headers)
+    current_actions = get_res.json().get('response', {}).get('assistants', [{}])[0].get('actions', [])
+    
+    new_actions = list(set(current_actions + [action_id]))
+    payload = {"model_id": assistant_id, "actions": new_actions}
     response = requests.post(url, headers=headers, json=payload)
     if response.status_code == 200:
         print("Action attached successfully!")

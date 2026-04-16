@@ -9,10 +9,10 @@ Devin is an autonomous car brokerage agent designed to find private car sellers 
 - **Status:** FULLY OPERATIONAL. 
 - **Sarah ID:** `0a420ae4-6d32-46b4-8c84-7f9315831736` (Live at +1 437 525 4343)
 - **Co-Architect Power:** Sarah is now programmatically linked to the Manus API v2 to dispatch Devin, query memory, and upload assets in real-time.
-- **Live Bridge:** Actions `GET_VEHICLE_IMAGES` and `DISPATCH_DEVIN_PROD` are attached to Sarah for in-call messaging and buyer matching.
+- **Live Bridge:** Actions `GET_VEHICLE_IMAGES_PROD` and `DISPATCH_DEVIN_PROD` are attached to Sarah for in-call messaging and buyer matching.
 - **Production Check:**
-    - `DISPATCH_DEVIN_PROD`: **Fully functional** with live Manus API v2 key and correct `x-manus-api-key` header. Verified connectivity via `test_manus_final.py`.
-    - `GET_VEHICLE_IMAGES`: **Lead 1731517390 (Kelly) Indexed & Verified.** Confirmed Sarah can access lead details (excluding phone number) via `verify_sarah_access_final.py` (Task ID: `YwSWBGGcTvdmRpXyFFy3vK`). *Note: A manual indexing script (`index_lead_prod.py`) is available for pilot testing to resolve 404 errors for specific leads.*
+    - `DISPATCH_DEVIN_PROD`: **Fully functional** (ID: `03c34552-662f-402d-ba59-92b72f3270fd`). Correctly configured with `x-manus-api-key` header and v2 endpoint.
+    - `GET_VEHICLE_IMAGES_PROD`: **Fully functional** (ID: `a8e7bdd9-fd79-42b1-8826-730c439abcbf`). Correctly configured with `x-manus-api-key` header. Confirmed Sarah can access lead details (excluding phone number) via `verify_sarah_access_final.py` (Task ID: `YwSWBGGcTvdmRpXyFFy3vK`). *Note: A manual indexing script (`index_lead_prod.py`) is available for pilot testing to resolve 404 errors for specific leads.*
 
 ## Key Metrics
 | Metric | Value |
