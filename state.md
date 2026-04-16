@@ -10,10 +10,11 @@ Devin is an autonomous car brokerage agent designed to find private car sellers 
 - **Sarah ID:** `0a420ae4-6d32-46b4-8c84-7f9315831736` (Live at +1 437 525 4343)
 - **Last Call:** 2026-04-16 (Call ID: `447cacf0-97a4-4a2a-8d2d-10a54b236bf0`)
 - **Webhook URL:** `https://8000-if1w718srqawckv2yug6k-a569c4d6.us2.manus.computer/webhook` (Verified)
-- **Co-Architect Power:** Sarah is now programmatically linked to the Manus API v2 to dispatch Devin, query memory, and upload assets in real-time.
-- **Live Bridge:** Actions `GET_VEHICLE_IMAGES_PROD` and `DISPATCH_DEVIN_PROD` are attached to Sarah for in-call messaging and buyer matching.
+- **Co-Architect Power:** Sarah is now programmatically linked to the Manus API v2.
+- **Live Bridge:** Actions `GET_VEHICLE_IMAGES_PROD` and `dispatch_devin_v3` are attached to Sarah.
 - **Production Check:**
-    - `DISPATCH_DEVIN_PROD`: **Fully functional** (ID: `03c34552-662f-402d-ba59-92b72f3270fd`). Correctly configured with `x-manus-api-key` header and v2 endpoint.
+    - `dispatch_devin_v3`: **Fully functional** (ID: `7154a9eb-3cd3-4ef3-91a6-a6e6ce6284af`). Fixed authentication headers and added dynamic caller/transcript payload.
+    - `Transcript Sync`: **Operational**. Manual sync script `fix_sarah_integration.py` successfully pulled the latest call from Kelly.
     - `GET_VEHICLE_IMAGES_PROD`: **Fully functional** (ID: `a8e7bdd9-fd79-42b1-8826-730c439abcbf`). Correctly configured with `x-manus-api-key` header. Confirmed Sarah can access lead details (excluding phone number) via `verify_sarah_access_final.py` (Task ID: `YwSWBGGcTvdmRpXyFFy3vK`). *Note: A manual indexing script (`index_lead_prod.py`) is available for pilot testing to resolve 404 errors for specific leads.*
 - **Action Audit:** Verified and cleaned all duplicate actions. Sarah now has exactly 2 production actions attached.
 

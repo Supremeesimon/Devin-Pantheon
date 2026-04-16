@@ -3,7 +3,7 @@ import json
 import os
 
 # Configuration
-CREDENTIALS_PATH = "/home/ubuntu/Devin-Pantheon/config/credentials.json"
+CREDENTIALS_PATH = "/home/ubuntu/devin-pantheon/config/credentials.json"
 
 def test_manus_final():
     """

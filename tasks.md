@@ -1,13 +1,13 @@
 # Devin Pantheon Tasks
 
 ## Current Tasks
+- [x] Trigger first Synthflow call via Sarah persona.
+- [x] Sarah to qualify Kelly and identify her phone number via call.
+- [x] Sync latest call transcript to memory.
+- [x] Fix Sarah-to-Devin action dispatch (`dispatch_devin_v3`).
 - [ ] Implement Wake-Sync-Act-Sleep Python script (V2 Integration).
 - [ ] Schedule recurring cron task for autonomous runs.
-- [ ] Trigger first Synthflow call via Sarah persona.
 - [ ] Resolve 404 for `GET_VEHICLE_IMAGES` by implementing the "Live Bridge" endpoint or mock server.
-- [ ] Sarah to qualify Kelly and identify her phone number (`+1 555 123 4567`) via call.
-- [ ] Process "Hot" lead from Sarah's Manus API dispatch after phone identification.
-- [ ] Process first "Hot" lead from Sarah's Manus API dispatch.
 - [ ] Automate Buyer Outreach based on Sarah's "Hot" signal.
 
 ## Completed Tasks
