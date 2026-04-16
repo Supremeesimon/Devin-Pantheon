@@ -19,38 +19,28 @@ class SarahController:
         """List all agents in the Synthflow account."""
         log("Listing all agents...")
         try:
-            # Note: The docs show GET /v2/assistants/
             response = requests.get(f"{self.base_url}/assistants/", headers=self.headers)
             response.raise_for_status()
             data = response.json()
-            # Based on docs, response is { "status": "success", "response": { "assistants": [...] } }
-            # But the real response seems to be "ok"
             if data.get("status") in ["success", "ok"]:
                 agents = data.get("response", {}).get("assistants", [])
                 log(f"Found {len(agents)} agents.")
                 return agents
-            log(f"List agents returned non-success status: {data.get('status')}")
-            log(f"Full response: {json.dumps(data, indent=2)}")
             return []
         except Exception as e:
             log(f"Failed to list agents: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                log(f"Response content: {e.response.text}")
             return []
 
     def delete_agent(self, assistant_id):
         """Delete a specific agent by ID."""
         log(f"Deleting agent {assistant_id}...")
         try:
-            # Note: The docs show DELETE /v2/assistants/:model_id
             response = requests.delete(f"{self.base_url}/assistants/{assistant_id}", headers=self.headers)
             response.raise_for_status()
             log(f"Agent {assistant_id} deleted successfully.")
             return True
         except Exception as e:
             log(f"Failed to delete agent {assistant_id}: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                log(f"Response content: {e.response.text}")
             return False
 
     def cleanup_older_agents(self):
@@ -62,14 +52,42 @@ class SarahController:
         
         log(f"Starting cleanup of {len(agents)} agents...")
         for agent in agents:
-            # The list agents response for each agent seems to have "model_id" or "id"
-            # Let's check both or log the agent object
             agent_id = agent.get("id") or agent.get("model_id")
             if agent_id:
                 self.delete_agent(agent_id)
-            else:
-                log(f"Could not find ID for agent: {json.dumps(agent)}")
         log("Cleanup complete.")
+
+    def create_action(self, action_payload):
+        """Create a custom action in Synthflow."""
+        log(f"Creating action: {action_payload.get('CUSTOM_ACTION', {}).get('name', 'Unknown')}")
+        try:
+            response = requests.post(f"{self.base_url}/actions", headers=self.headers, json=action_payload)
+            response.raise_for_status()
+            data = response.json()
+            action_id = data.get("response", {}).get("action_id")
+            log(f"Action created successfully! Action ID: {action_id}")
+            return action_id
+        except Exception as e:
+            log(f"Failed to create action: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                log(f"Response content: {e.response.text}")
+            return None
+
+    def attach_actions(self, assistant_id, action_ids):
+        """Attach multiple actions to an assistant."""
+        log(f"Attaching actions {action_ids} to assistant {assistant_id}...")
+        try:
+            # Docs specify 'model_id' and 'actions' (list of strings)
+            payload = {"model_id": assistant_id, "actions": action_ids}
+            response = requests.post(f"{self.base_url}/actions/attach", headers=self.headers, json=payload)
+            response.raise_for_status()
+            log(f"Actions attached successfully.")
+            return True
+        except Exception as e:
+            log(f"Failed to attach actions: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                log(f"Response content: {e.response.text}")
+            return False
 
     def create_sarah(self):
         """Create the Sarah assistant via Synthflow API with full blueprint specs."""
@@ -113,22 +131,51 @@ class SarahController:
             response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
             response.raise_for_status()
             assistant_data = response.json()
-            log(f"Full Response: {json.dumps(assistant_data, indent=2)}")
             assistant_id = assistant_data.get("response", {}).get("model_id")
             log(f"Sarah created successfully! Assistant ID: {assistant_id}")
-            return assistant_data
+            return assistant_id
         except Exception as e:
             log(f"Failed to create Sarah: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                log(f"Response content: {e.response.text}")
             return None
 
 if __name__ == "__main__":
     controller = SarahController()
-    # First, list them to see what's actually there
-    agents = controller.list_agents()
-    if agents:
-        controller.cleanup_older_agents()
+    controller.cleanup_older_agents()
     
-    # Now create Sarah
-    controller.create_sarah()
+    # 1. Create Sarah
+    sarah_id = controller.create_sarah()
+    
+    if sarah_id:
+        # 2. Define and Create Actions
+        action_configs = [
+            {
+                "CUSTOM_ACTION": {
+                    "name": "GET_VEHICLE_IMAGES",
+                    "description": "Retrieves vehicle image URLs from Devin's system for a given ad ID.",
+                    "http_mode": "GET",
+                    "url": "https://devin-api.manus.im/v1/leads/{ad_id}/images",
+                    "speech_while_using_the_tool": "Let me pull up those photos for you right now...",
+                    "run_action_before_call_start": False
+                }
+            },
+            {
+                "CUSTOM_ACTION": {
+                    "name": "DISPATCH_DEVIN",
+                    "description": "Creates a high-priority task for Devin via Manus API when a seller is ready to sell.",
+                    "http_mode": "POST",
+                    "url": "https://devin-api.manus.im/v1/tasks/dispatch",
+                    "speech_while_using_the_tool": "I'm letting Devin know right now, he'll be thrilled.",
+                    "run_action_before_call_start": False
+                }
+            }
+        ]
+        
+        created_action_ids = []
+        for action_payload in action_configs:
+            action_id = controller.create_action(action_payload)
+            if action_id:
+                created_action_ids.append(action_id)
+        
+        # 3. Attach all created actions
+        if created_action_ids:
+            controller.attach_actions(sarah_id, created_action_ids)
