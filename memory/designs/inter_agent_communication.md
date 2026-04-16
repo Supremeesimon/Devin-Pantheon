@@ -1,11 +1,11 @@
 # Inter-Agent Communication: The "Live Bridge" Framework
 
 ## 1. Overview
-This framework defines how Sarah (the Intelligence Officer) and Devin (the Architect) communicate in real-time to ensure a seamless flow from Kijiji lead to closed deal. It utilizes Synthflow's Custom Actions and Webhooks to create a "Live Bridge" between the voice agent and the autonomous backend.
+This framework defines how Devin (the Architect) initiates contact with Kijiji leads and how Sarah (the Intelligence Officer) handles inbound calls and communicates with Devin in real-time. It utilizes Synthflow's Custom Actions and Webhooks to create a "Live Bridge" between the voice agent and the autonomous backend, ensuring a seamless flow from initial contact to a closed deal.
 
 ## 2. Sarah's "Live" Image Retrieval (Custom Action)
 
-When a buyer or seller asks for photos during a call, Sarah triggers a **Custom Action** to retrieve the image URLs from Devin's Pantheon.
+When a buyer or seller asks for photos during a call, Sarah triggers a Custom Action to retrieve the image URLs from Devin's Pantheon (GitHub repository), where Devin has previously downloaded and stored them.
 
 ### 2.1. Technical Workflow
 1.  **Trigger:** Sarah identifies a request for images (e.g., "Can you send me photos of the car?").
@@ -64,7 +64,7 @@ Devin maintains a persistent list of buyers to ensure he knows exactly who to ca
 | Cash For Cars AB | +1 800-555-0199 | Any (Scrap/Resale) | $5,000 | Good for older vehicles or high mileage. |
 
 ## 5. Summary of the "Live Bridge"
-*   **Sarah** is the eyes and ears, gathering intel and sending images in real-time.
+*   **SaDevin is the proactive prospector, initiating contact with sellers and storing lead intelligence (including images) in the GitHub Pantheon. Sarah is the intelligence officer, handling inbound calls, gathering further intel, and sending images in real-time.
 *   **The Webhook** is the nervous system, waking Devin up when action is needed.
 *   **Devin** is the brain, matching sellers to buyers and spawning new missions.
-*   **GitHub Pantheon** is the memory, storing every image, lead, and buyer preference.
+*   **GiGitHub Pantheon is the central memory, storing every image, lead detail, and buyer preference, ensuring persistent and accessible intelligence for both agents.
