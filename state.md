@@ -12,7 +12,7 @@ Devin is an autonomous car brokerage agent designed to find private car sellers 
 - **Live Bridge:** Actions `GET_VEHICLE_IMAGES` and `DISPATCH_DEVIN_PROD` are attached to Sarah for in-call messaging and buyer matching.
 - **Production Check:**
     - `DISPATCH_DEVIN_PROD`: **Fully functional** with live Manus API v2 key and correct `x-manus-api-key` header. Verified connectivity via `test_manus_final.py`.
-    - `GET_VEHICLE_IMAGES`: **Lead 1731517390 (Kelly) Indexed.** Verified connectivity via `index_lead_prod.py`. *Note: A manual indexing script (`index_lead_prod.py`) is available for pilot testing to resolve 404 errors for specific leads.*
+    - `GET_VEHICLE_IMAGES`: **Lead 1731517390 (Kelly) Indexed & Verified.** Confirmed Sarah can access lead details (excluding phone number) via `verify_sarah_access_final.py` (Task ID: `YwSWBGGcTvdmRpXyFFy3vK`). *Note: A manual indexing script (`index_lead_prod.py`) is available for pilot testing to resolve 404 errors for specific leads.*
 
 ## Key Metrics
 | Metric | Value |
