@@ -126,12 +126,11 @@ if __name__ == "__main__":
                     "name": "DISPATCH_DEVIN",
                     "description": "Creates a high-priority task for Devin via Manus API when a seller is ready to sell.",
                     "http_mode": "POST",
-                    "url": "https://api.manus.im/v1/tasks",
+                    "url": "https://api.manus.ai/v2/task.create",
                     "speech_while_using_the_tool": "I'm letting Devin know right now, he'll be thrilled.",
                     "run_action_before_call_start": False,
-                    "custom_auth": {
-                        "type": "bearer",
-                        "header_value": os.getenv('MANUS_API_KEY')
+                    "custom_headers": {
+                        "x-manus-api-key": os.getenv('MANUS_API_KEY')
                     }
                 }
             }
