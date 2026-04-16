@@ -4,7 +4,9 @@
 - [ ] Implement Wake-Sync-Act-Sleep Python script (V2 Integration).
 - [ ] Schedule recurring cron task for autonomous runs.
 - [ ] Trigger first Synthflow call via Sarah persona.
-- [ ] Run `index_lead.py` manually for Kelly's ad (`ad_id` 1731517390) to resolve the 404 error before the first pilot call.
+- [ ] Resolve 404 for `GET_VEHICLE_IMAGES` by implementing the "Live Bridge" endpoint or mock server.
+- [ ] Sarah to qualify Kelly and identify her phone number (`+1 555 123 4567`) via call.
+- [ ] Process "Hot" lead from Sarah's Manus API dispatch after phone identification.
 - [ ] Process first "Hot" lead from Sarah's Manus API dispatch.
 - [ ] Automate Buyer Outreach based on Sarah's "Hot" signal.
 

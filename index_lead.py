@@ -3,7 +3,8 @@ import json
 import os
 
 # Configuration
-MANUS_API_URL = "https://api.manus.im/v1/leads"
+# Correct Design Endpoint: https://devin-api.manus.im/v1/leads/{ad_id}/images
+MANUS_API_URL = "https://devin-api.manus.im/v1/leads"
 # Note: You need to set the MANUS_API_KEY environment variable before running this script
 MANUS_API_KEY = os.environ.get("MANUS_API_KEY")
 
@@ -44,7 +45,8 @@ if __name__ == "__main__":
         "image_urls": [
             "https://i.ebayimg.com/images/g/example1/s-l1600.jpg",
             "https://i.ebayimg.com/images/g/example2/s-l1600.jpg"
-        ]
+        ],
+        "notes": "Phone number redacted. Pending Sarah's qualification call."
     }
     
     print(f"Indexing lead {kelly_ad_id}...")
