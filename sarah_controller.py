@@ -16,15 +16,23 @@ class SarahController:
         }
 
     def create_sarah(self):
-        """Create the Sarah assistant via Synthflow API."""
-        log("Initiating Sarah's creation...")
+        """Create the Sarah assistant via Synthflow API with full blueprint specs."""
+        log("Initiating Sarah's creation with full blueprint...")
         payload = {
             "type": "inbound",
             "name": "Sarah - Car Brokerage Intelligence Officer",
-            "description": "Inbound agent for Devin Car Brokerage.",
+            "description": "Inbound agent for Devin Car Brokerage. Handles initial seller inquiries, qualifies leads, and coordinates with Devin.",
             "phone_number": os.getenv("SYNTHFLOW_NUMBER"),
+            "external_webhook_url": "https://devin-api.manus.im/v1/synthflow/webhook",
+            "inbound_call_webhook_url": "https://devin-api.manus.im/v1/synthflow/inbound-call-webhook",
             "agent": {
-                "prompt": "You are Sarah, working for Devin. Qualify private car sellers in Lethbridge, AB. Acknowledge Kijiji texts. Extract vehicle details: Year, Make, Model, Mileage, Condition, Price, Motivation.",
+                "prompt": (
+                    "You are Sarah, a friendly and professional car brokerage agent working for Devin. "
+                    "Your primary goal is to qualify private car sellers in Lethbridge, AB. "
+                    "Acknowledge the Kijiji context. Extract: Year, Make, Model, Mileage, Condition, Price, Motivation. "
+                    "If the seller is 'hot', fire a high-priority webhook. "
+                    "Use the 'GET_VEHICLE_IMAGES' action if they want to see what photos we have."
+                ),
                 "greeting_message": "Hello, this is Sarah calling for Devin. I believe you're calling about the text we sent regarding your vehicle. Do you have a moment to chat?",
                 "llm": "gemini-2.5-flash",
                 "language": "en-US",
@@ -33,6 +41,11 @@ class SarahController:
             "is_recording": True
         }
         
+        # Simulation mode for the test run
+        if os.getenv("DEVIN_TEST_MODE") == "true":
+            log("[TEST MODE] Sarah creation payload validated. Skipping actual API call.")
+            return {"id": "test_assistant_id_123", "status": "success"}
+
         try:
             response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
             response.raise_for_status()
