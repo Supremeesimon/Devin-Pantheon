@@ -31,31 +31,13 @@ class SarahController:
             log(f"Failed to list agents: {e}")
             return []
 
-    def delete_agent(self, assistant_id):
-        """Delete a specific agent by ID."""
-        log(f"Deleting agent {assistant_id}...")
-        try:
-            response = requests.delete(f"{self.base_url}/assistants/{assistant_id}", headers=self.headers)
-            response.raise_for_status()
-            log(f"Agent {assistant_id} deleted successfully.")
-            return True
-        except Exception as e:
-            log(f"Failed to delete agent {assistant_id}: {e}")
-            return False
-
-    def cleanup_older_agents(self):
-        """Delete all existing agents to ensure a fresh start."""
+    def find_sarah(self):
+        """Find the existing Sarah agent by name."""
         agents = self.list_agents()
-        if not agents:
-            log("No existing agents found to clean up.")
-            return
-        
-        log(f"Starting cleanup of {len(agents)} agents...")
         for agent in agents:
-            agent_id = agent.get("id") or agent.get("model_id")
-            if agent_id:
-                self.delete_agent(agent_id)
-        log("Cleanup complete.")
+            if agent.get("name") == "Sarah - Car Brokerage Intelligence Officer":
+                return agent.get("id") or agent.get("model_id")
+        return None
 
     def create_action(self, action_payload):
         """Create a custom action in Synthflow."""
@@ -77,7 +59,6 @@ class SarahController:
         """Attach multiple actions to an assistant."""
         log(f"Attaching actions {action_ids} to assistant {assistant_id}...")
         try:
-            # Docs specify 'model_id' and 'actions' (list of strings)
             payload = {"model_id": assistant_id, "actions": action_ids}
             response = requests.post(f"{self.base_url}/actions/attach", headers=self.headers, json=payload)
             response.raise_for_status()
@@ -85,13 +66,12 @@ class SarahController:
             return True
         except Exception as e:
             log(f"Failed to attach actions: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                log(f"Response content: {e.response.text}")
             return False
 
-    def create_sarah(self):
-        """Create the Sarah assistant via Synthflow API with full blueprint specs."""
-        log("Initiating Sarah's creation with full blueprint...")
+    def create_or_update_sarah(self):
+        """Create or update the Sarah assistant via Synthflow API."""
+        sarah_id = self.find_sarah()
+        
         payload = {
             "type": "inbound",
             "name": "Sarah - Car Brokerage Intelligence Officer",
@@ -127,26 +107,39 @@ class SarahController:
             "is_recording": True
         }
         
-        try:
-            response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
-            response.raise_for_status()
-            assistant_data = response.json()
-            assistant_id = assistant_data.get("response", {}).get("model_id")
-            log(f"Sarah created successfully! Assistant ID: {assistant_id}")
-            return assistant_id
-        except Exception as e:
-            log(f"Failed to create Sarah: {e}")
-            return None
+        if sarah_id:
+            log(f"Sarah already exists (ID: {sarah_id}). Updating her configuration...")
+            try:
+                response = requests.put(f"{self.base_url}/assistants/{sarah_id}", headers=self.headers, json=payload)
+                response.raise_for_status()
+                log("Sarah updated successfully.")
+                return sarah_id
+            except Exception as e:
+                log(f"Failed to update Sarah: {e}")
+                return None
+        else:
+            log("Sarah does not exist. Creating her now...")
+            try:
+                response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                sarah_id = data.get("response", {}).get("model_id")
+                log(f"Sarah created successfully! ID: {sarah_id}")
+                return sarah_id
+            except Exception as e:
+                log(f"Failed to create Sarah: {e}")
+                if hasattr(e, 'response') and e.response is not None:
+                    log(f"Response content: {e.response.text}")
+                return None
 
 if __name__ == "__main__":
     controller = SarahController()
-    controller.cleanup_older_agents()
     
-    # 1. Create Sarah
-    sarah_id = controller.create_sarah()
+    # 1. Create or Update Sarah
+    sarah_id = controller.create_or_update_sarah()
     
     if sarah_id:
-        # 2. Define and Create Actions
+        # 2. Define Actions
         action_configs = [
             {
                 "CUSTOM_ACTION": {
@@ -163,9 +156,13 @@ if __name__ == "__main__":
                     "name": "DISPATCH_DEVIN",
                     "description": "Creates a high-priority task for Devin via Manus API when a seller is ready to sell.",
                     "http_mode": "POST",
-                    "url": "https://devin-api.manus.im/v1/tasks/dispatch",
+                    "url": "https://api.manus.im/v1/tasks",
                     "speech_while_using_the_tool": "I'm letting Devin know right now, he'll be thrilled.",
-                    "run_action_before_call_start": False
+                    "run_action_before_call_start": False,
+                    "custom_auth": {
+                        "type": "bearer",
+                        "header_value": os.getenv('MANUS_API_KEY')
+                    }
                 }
             }
         ]
@@ -176,6 +173,6 @@ if __name__ == "__main__":
             if action_id:
                 created_action_ids.append(action_id)
         
-        # 3. Attach all created actions
+        # 3. Attach actions
         if created_action_ids:
             controller.attach_actions(sarah_id, created_action_ids)
