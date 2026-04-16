@@ -7,9 +7,12 @@ Devin is an autonomous car brokerage agent designed to find private car sellers 
 - **Phase:** Mission-Ready (Production Sarah Live)
 - **Last Run:** 2026-04-15
 - **Status:** FULLY OPERATIONAL. 
-- **Sarah ID:** `02a6c61f-618c-4cca-89dc-7ec3c8781dbf` (Live at +1 437 525 4343)
+- **Sarah ID:** `0a420ae4-6d32-46b4-8c84-7f9315831736` (Live at +1 437 525 4343)
 - **Co-Architect Power:** Sarah is now programmatically linked to the Manus API to dispatch Devin, query memory, and upload assets in real-time.
 - **Live Bridge:** Actions `GET_VEHICLE_IMAGES` and `DISPATCH_DEVIN` are attached to Sarah for in-call messaging and buyer matching.
+- **Production Check:**
+    - `DISPATCH_DEVIN`: Fully functional with live Manus API key.
+    - `GET_VEHICLE_IMAGES`: Endpoint registered (`api.manus.im/v1/leads/{ad_id}/images`). *Note: Currently returning 404 until the lead database is fully indexed in production.*
 
 ## Key Metrics
 | Metric | Value |
