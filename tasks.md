@@ -4,6 +4,7 @@
 - [ ] Implement Wake-Sync-Act-Sleep Python script (V2 Integration).
 - [ ] Schedule recurring cron task for autonomous runs.
 - [ ] Trigger first Synthflow call via Sarah persona.
+- [ ] Run `index_lead.py` manually for Kelly's ad (`ad_id` 1731517390) to resolve the 404 error before the first pilot call.
 - [ ] Process first "Hot" lead from Sarah's Manus API dispatch.
 - [ ] Automate Buyer Outreach based on Sarah's "Hot" signal.
 
