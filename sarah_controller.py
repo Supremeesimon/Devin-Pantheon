@@ -15,28 +15,17 @@ class SarahController:
             "Content-Type": "application/json"
         }
 
-    def list_agents(self):
-        """List all agents in the Synthflow account."""
-        log("Listing all agents...")
+    def find_sarah(self):
+        """Find the existing Sarah agent by name."""
         try:
             response = requests.get(f"{self.base_url}/assistants/", headers=self.headers)
             response.raise_for_status()
-            data = response.json()
-            if data.get("status") in ["success", "ok"]:
-                agents = data.get("response", {}).get("assistants", [])
-                log(f"Found {len(agents)} agents.")
-                return agents
-            return []
+            agents = response.json().get("response", {}).get("assistants", [])
+            for agent in agents:
+                if agent.get("name") == "Sarah - Car Brokerage Intelligence Officer":
+                    return agent.get("id") or agent.get("model_id")
         except Exception as e:
             log(f"Failed to list agents: {e}")
-            return []
-
-    def find_sarah(self):
-        """Find the existing Sarah agent by name."""
-        agents = self.list_agents()
-        for agent in agents:
-            if agent.get("name") == "Sarah - Car Brokerage Intelligence Officer":
-                return agent.get("id") or agent.get("model_id")
         return None
 
     def create_action(self, action_payload):
@@ -45,14 +34,11 @@ class SarahController:
         try:
             response = requests.post(f"{self.base_url}/actions", headers=self.headers, json=action_payload)
             response.raise_for_status()
-            data = response.json()
-            action_id = data.get("response", {}).get("action_id")
-            log(f"Action created successfully! Action ID: {action_id}")
+            action_id = response.json().get("response", {}).get("action_id")
+            log(f"Action created! ID: {action_id}")
             return action_id
         except Exception as e:
             log(f"Failed to create action: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                log(f"Response content: {e.response.text}")
             return None
 
     def attach_actions(self, assistant_id, action_ids):
@@ -62,16 +48,15 @@ class SarahController:
             payload = {"model_id": assistant_id, "actions": action_ids}
             response = requests.post(f"{self.base_url}/actions/attach", headers=self.headers, json=payload)
             response.raise_for_status()
-            log(f"Actions attached successfully.")
+            log("Actions attached successfully.")
             return True
         except Exception as e:
             log(f"Failed to attach actions: {e}")
             return False
 
-    def create_or_update_sarah(self):
-        """Create or update the Sarah assistant via Synthflow API."""
-        sarah_id = self.find_sarah()
-        
+    def update_sarah(self, sarah_id):
+        """Update the Sarah assistant via Synthflow API."""
+        log(f"Updating Sarah (ID: {sarah_id})...")
         payload = {
             "type": "inbound",
             "name": "Sarah - Car Brokerage Intelligence Officer",
@@ -107,46 +92,31 @@ class SarahController:
             "is_recording": True
         }
         
-        if sarah_id:
-            log(f"Sarah already exists (ID: {sarah_id}). Updating her configuration...")
-            try:
-                response = requests.put(f"{self.base_url}/assistants/{sarah_id}", headers=self.headers, json=payload)
-                response.raise_for_status()
-                log("Sarah updated successfully.")
-                return sarah_id
-            except Exception as e:
-                log(f"Failed to update Sarah: {e}")
-                return None
-        else:
-            log("Sarah does not exist. Creating her now...")
-            try:
-                response = requests.post(f"{self.base_url}/assistants", headers=self.headers, json=payload)
-                response.raise_for_status()
-                data = response.json()
-                sarah_id = data.get("response", {}).get("model_id")
-                log(f"Sarah created successfully! ID: {sarah_id}")
-                return sarah_id
-            except Exception as e:
-                log(f"Failed to create Sarah: {e}")
-                if hasattr(e, 'response') and e.response is not None:
-                    log(f"Response content: {e.response.text}")
-                return None
+        try:
+            response = requests.put(f"{self.base_url}/assistants/{sarah_id}", headers=self.headers, json=payload)
+            response.raise_for_status()
+            log("Sarah updated successfully.")
+            return True
+        except Exception as e:
+            log(f"Failed to update Sarah: {e}")
+            return False
 
 if __name__ == "__main__":
     controller = SarahController()
+    sid = controller.find_sarah()
     
-    # 1. Create or Update Sarah
-    sarah_id = controller.create_or_update_sarah()
-    
-    if sarah_id:
-        # 2. Define Actions
-        action_configs = [
+    if sid:
+        # 1. Update Sarah's prompt
+        controller.update_sarah(sid)
+        
+        # 2. Create and Attach correct actions
+        correct_actions = [
             {
                 "CUSTOM_ACTION": {
                     "name": "GET_VEHICLE_IMAGES",
                     "description": "Retrieves vehicle image URLs from Devin's system for a given ad ID.",
                     "http_mode": "GET",
-                    "url": "https://devin-api.manus.im/v1/leads/{ad_id}/images",
+                    "url": "https://api.manus.im/v1/leads/{ad_id}/images",
                     "speech_while_using_the_tool": "Let me pull up those photos for you right now...",
                     "run_action_before_call_start": False
                 }
@@ -167,12 +137,15 @@ if __name__ == "__main__":
             }
         ]
         
-        created_action_ids = []
-        for action_payload in action_configs:
-            action_id = controller.create_action(action_payload)
-            if action_id:
-                created_action_ids.append(action_id)
+        aids = []
+        for config in correct_actions:
+            aid = controller.create_action(config)
+            if aid:
+                aids.append(aid)
         
-        # 3. Attach actions
-        if created_action_ids:
-            controller.attach_actions(sarah_id, created_action_ids)
+        if aids:
+            controller.attach_actions(sid, aids)
+        
+        log("Final setup complete. Sarah has exactly 2 correct actions.")
+    else:
+        log("Sarah not found. Please create her first.")
